@@ -11,6 +11,7 @@ use Laracasts\Flash\Flash;
 use Modules\Core\Sidebar\AdminSideBar;
 use Modules\Dashboard\Entities\Widget;
 use Modules\Loan\Entities\Loan;
+use Modules\Loan\Entities\LoanTransaction;
 use Nwidart\Modules\Facades\Module;
 
 class DashboardController extends Controller
@@ -50,7 +51,22 @@ class DashboardController extends Controller
         \JavaScript::put([
             'user_widgets' => $user_widgets
         ]);
-        return theme_view('dashboard::dashboard', compact('available_widgets', 'user_widgets'));
+        $loanQuery = Loan::query();
+        $isLoanOfficer = Auth::user()->hasAnyRole(['loan officer', 'loan-officer', 'field officer']);
+        if ($isLoanOfficer) {
+            $loanQuery->where('loan_officer_id', Auth::id());
+        }
+        $loanIds = (clone $loanQuery)->pluck('id');
+        $dashboardMetrics = [
+            'portfolio' => (clone $loanQuery)->sum('principal_disbursed_derived'),
+            'outstanding' => (clone $loanQuery)->sum('total_outstanding_derived'),
+            'collected' => (clone $loanQuery)->sum('total_repaid_derived'),
+            'active' => (clone $loanQuery)->where('status', 'active')->count(),
+            'pending' => (clone $loanQuery)->whereIn('status', ['pending', 'submitted'])->count(),
+            'today_collected' => LoanTransaction::whereIn('loan_id', $loanIds)->where('loan_transaction_type_id', 2)->whereDate('submitted_on', now()->toDateString())->sum('credit'),
+        ];
+        $recentLoans = (clone $loanQuery)->with(['client', 'currency'])->latest()->limit(6)->get();
+        return theme_view('dashboard::dashboard', compact('available_widgets', 'user_widgets', 'dashboardMetrics', 'recentLoans', 'isLoanOfficer'));
     }
 
     /**

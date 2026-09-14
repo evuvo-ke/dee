@@ -14,6 +14,6 @@
 Route::prefix('mpesa')->group(function() {
     Route::post('get_loan_intent', 'MpesaController@get_loan_intent');
     Route::post('get_access_token', 'MpesaController@get_access_token');
-    Route::any('capture_payment', 'MpesaController@capture_payment');
+    Route::post('capture_payment', 'MpesaController@capture_payment')->middleware('auth');
 });
-Route::any('webhooks/mpesa', 'MpesaController@webhook');
+Route::post('webhooks/mpesa', 'MpesaController@webhook');

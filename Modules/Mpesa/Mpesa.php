@@ -207,10 +207,11 @@ class Mpesa extends PaymentGateway
             loan_id: "$loan_id",
             mobile: mobile,
           }).then(function (response) {
-              console.log(response.data);
-          
+              toastr.info(response.data.message);
+              submitButton.innerHTML = 'Waiting for M-Pesa confirmation';
           }).catch(function (error) {
-              toastr.warning(error.data.message);
+              var message = error.response && error.response.data && error.response.data.message ? error.response.data.message : 'Unable to start the M-Pesa payment.';
+              toastr.warning(message);
                $("#pay_button").removeAttr('disabled');
           });
         });
