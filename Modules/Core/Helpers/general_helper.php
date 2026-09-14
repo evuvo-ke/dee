@@ -110,6 +110,9 @@ if (!function_exists('theme_view')) {
         $active_theme = strtolower(config('active_theme'));
         if ($factory->exists(str_replace("::", "::themes.$active_theme.", $view))) {
             $view = str_replace("::", "::themes.$active_theme.", $view);
+        } elseif ($active_theme !== 'adminlte' && $factory->exists(str_replace("::", "::themes.adminlte.", $view))) {
+            // Keep legacy module views functional while a theme modernizes them progressively.
+            $view = str_replace("::", "::themes.adminlte.", $view);
         }
         return $factory->make($view, $data, $mergeData);
     }
@@ -129,6 +132,8 @@ if (!function_exists('theme_view_file')) {
         $active_theme = strtolower(config('active_theme'));
         if ($factory->exists(str_replace("::", "::themes.$active_theme.", $view))) {
             $view = str_replace("::", "::themes.$active_theme.", $view);
+        } elseif ($active_theme !== 'adminlte' && $factory->exists(str_replace("::", "::themes.adminlte.", $view))) {
+            $view = str_replace("::", "::themes.adminlte.", $view);
         }
         return $view;
     }
